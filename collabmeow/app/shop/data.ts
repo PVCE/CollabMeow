@@ -1,5 +1,5 @@
 export const cats = [
-    {
+    {                                  
         id: 1,
         name: "Gamer",
         breed: "British Shorthair",
