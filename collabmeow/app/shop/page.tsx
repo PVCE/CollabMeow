@@ -1,24 +1,157 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
+import { gsap } from "gsap";
+import { TextPlugin } from "gsap/TextPlugin";
+import { useRouter } from "next/navigation";
 import { cats } from "./data";
+
+gsap.registerPlugin(TextPlugin);
 
 const featuredCat = cats.find((cat) => cat.featured) || cats[0];
 const newArrivals = cats.filter((cat) => cat.isNew);
 const popularCats = cats.filter((cat) => cat.isPopular);
 
 export default function Shop() {
+  const router = useRouter();
+  const pageRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.set(".shop-reveal", {
+        opacity: 0,
+        y: 22,
+      });
+
+      gsap.set(".shop-card", {
+        opacity: 0,
+        y: 18,
+        scale: 0.98,
+      });
+
+      gsap.set(".shop-image", {
+        opacity: 0,
+        scale: 0.95,
+        rotate: -3,
+      });
+
+      gsap.set(".shop-stat", {
+        opacity: 0,
+        y: 16,
+      });
+
+      const typingTargets = document.querySelectorAll<HTMLElement>(".typing-text");
+      typingTargets.forEach((node, index) => {
+        const rawText = node.dataset.text || node.textContent || "";
+        const text = rawText.trim();
+
+        if (!text) {
+          return;
+        }
+
+        const content = document.createElement("span");
+        content.className = "typed-content";
+        content.style.display = "inline-block";
+
+        const cursor = document.createElement("span");
+        cursor.className = "typed-cursor";
+        cursor.textContent = "|";
+        cursor.style.display = "inline-block";
+        cursor.style.marginLeft = "0.08em";
+        cursor.style.color = "#111111";
+        cursor.style.fontWeight = "700";
+
+        node.innerHTML = "";
+        node.appendChild(content);
+        node.appendChild(cursor);
+
+        const cursorBlink = gsap.to(cursor, {
+          opacity: 0,
+          repeat: -1,
+          yoyo: true,
+          duration: 0.5,
+          ease: "power1.inOut",
+        });
+
+        gsap.fromTo(
+          content,
+          { text: "" },
+          {
+            text,
+            duration: Math.max(1.8, text.length * 0.06),
+            delay: 0.15 + index * 0.06,
+            ease: "none",
+            onComplete: () => {
+              cursorBlink.kill();
+              gsap.to(cursor, {
+                opacity: 0,
+                duration: 0.18,
+                ease: "power1.out",
+              });
+            },
+          }
+        );
+      });
+
+      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+      tl.to(".shop-reveal", {
+        opacity: 1,
+        y: 0,
+        duration: 0.74,
+        stagger: 0.08,
+      })
+        .to(
+          ".shop-card",
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.78,
+          },
+          "-=0.14"
+        )
+        .to(
+          ".shop-image",
+          {
+            opacity: 1,
+            scale: 1,
+            rotate: 0,
+            duration: 0.7,
+            ease: "power3.out",
+          },
+          "-=0.2"
+        )
+        .to(
+          ".shop-stat",
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.58,
+            stagger: 0.08,
+          },
+          "-=0.22"
+        );
+    }, pageRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background:
-          "linear-gradient(180deg, #fffaf3 0%, #fff4e8 45%, #fffaf7 100%)",
-        color: "#24170f",
-        fontFamily:
-          "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-      }}
-    >
+    <>
+      <main
+        ref={pageRef}
+        style={{
+          minHeight: "100vh",
+          background:
+            "linear-gradient(180deg, #fffaf3 0%, #fff4e8 45%, #fffaf7 100%)",
+          color: "#24170f",
+          fontFamily:
+            "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+          overflow: "hidden",
+        }}
+      >
       {/* Hero */}
       <section
         style={{
@@ -33,6 +166,7 @@ export default function Shop() {
       >
         <div>
           <div
+            className="shop-reveal"
             style={{
               display: "inline-flex",
               padding: "10px 18px",
@@ -49,6 +183,8 @@ export default function Shop() {
           </div>
 
           <h1
+            className="shop-reveal typing-text"
+            data-text="Find Your Perfect Cat."
             style={{
               fontSize: "clamp(3.4rem, 7vw, 6.8rem)",
               lineHeight: 0.95,
@@ -63,6 +199,8 @@ export default function Shop() {
           </h1>
 
           <p
+            className="shop-reveal typing-text"
+            data-text="Discover healthy, vaccinated, and socialized kittens from premium breeds. A modern way to meet your next best friend."
             style={{
               marginTop: "28px",
               maxWidth: "620px",
@@ -76,6 +214,7 @@ export default function Shop() {
           </p>
 
           <div
+            className="shop-reveal"
             style={{
               display: "flex",
               gap: "14px",
@@ -84,21 +223,7 @@ export default function Shop() {
             }}
           >
             <button
-              style={{
-                border: 0,
-                borderRadius: "999px",
-                padding: "16px 28px",
-                background: "linear-gradient(135deg,#24170f,#6f421f)",
-                color: "white",
-                fontWeight: 900,
-                cursor: "pointer",
-                boxShadow: "0 18px 35px rgba(80,45,20,0.25)",
-              }}
-            >
-              Browse Cats
-            </button>
-
-            <button
+              onClick={() => {router.push("/about")}}
               style={{
                 border: "1px solid #e8cba8",
                 borderRadius: "999px",
@@ -115,6 +240,7 @@ export default function Shop() {
         </div>
 
         <div
+          className="shop-card"
           style={{
             position: "relative",
             borderRadius: "42px",
@@ -126,6 +252,7 @@ export default function Shop() {
           }}
         >
           <img
+            className="shop-image"
             src={featuredCat.image}
             alt={featuredCat.name}
             style={{
@@ -190,6 +317,7 @@ export default function Shop() {
         ].map(([number, label]) => (
           <div
             key={label}
+            className="shop-stat"
             style={{
               background: "white",
               border: "1px solid #f0dcc3",
@@ -574,7 +702,8 @@ export default function Shop() {
         <strong style={{ color: "#24170f" }}>Meow Shop</strong> — Premium cats
         for loving homes.
       </footer>
-    </main>
+      </main>
+    </>
   );
 }
 

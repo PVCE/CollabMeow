@@ -2,8 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import { TextPlugin } from "gsap/TextPlugin";
 import Link from "next/link";
 import { cats } from "./shop/data";
+
+gsap.registerPlugin(TextPlugin);
 
 export default function HomePage() {
   const featuredCats = cats.slice(0, 3);
@@ -12,10 +15,13 @@ export default function HomePage() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.set(".cm-hero-badge, .cm-hero-title, .cm-hero-text, .cm-hero-actions, .cm-stat-card", {
-        opacity: 0,
-        y: 34,
-      });
+      gsap.set(
+        ".cm-hero-badge, .cm-hero-title, .cm-hero-text, .cm-hero-actions, .cm-stat-card",
+        {
+          opacity: 0,
+          y: 34,
+        }
+      );
 
       gsap.set(".cm-cat-card", {
         opacity: 0,
@@ -35,27 +41,81 @@ export default function HomePage() {
         scale: 0.76,
       });
 
+      const typingTargets = document.querySelectorAll<HTMLElement>(".typing-text");
+      typingTargets.forEach((node, index) => {
+        const rawText = node.dataset.text || node.textContent || "";
+        const text = rawText.trim();
+
+        if (!text) {
+          return;
+        }
+
+        const content = document.createElement("span");
+        content.className = "typed-content";
+        content.style.display = "inline-block";
+
+        const cursor = document.createElement("span");
+        cursor.className = "typed-cursor";
+        cursor.textContent = "|";
+        cursor.style.display = "inline-block";
+        cursor.style.marginLeft = "0.08em";
+        cursor.style.color = "#111111";
+        cursor.style.fontWeight = "700";
+        cursor.style.opacity = "0.9";
+
+        node.innerHTML = "";
+        node.appendChild(content);
+        node.appendChild(cursor);
+
+        const cursorBlink = gsap.to(cursor, {
+          opacity: 0,
+          repeat: -1,
+          yoyo: true,
+          duration: 0.5,
+          ease: "power1.inOut",
+        });
+
+        gsap.fromTo(
+          content,
+          { text: "" },
+          {
+            text,
+            duration: Math.max(1.8, text.length * 0.06),
+            delay: 0.15 + index * 0.06,
+            ease: "none",
+            onComplete: () => {
+              cursorBlink.kill();
+              gsap.to(cursor, {
+                opacity: 0,
+                duration: 0.18,
+                ease: "power1.out",
+              });
+            },
+          }
+        );
+      });
+
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-      tl.to(".cm-hero-badge", { opacity: 1, y: 0, duration: 0.65 })
-        .to(".cm-hero-title", { opacity: 1, y: 0, duration: 0.9 }, "-=0.35")
-        .to(".cm-hero-text", { opacity: 1, y: 0, duration: 0.7 }, "-=0.45")
-        .to(".cm-hero-actions", { opacity: 1, y: 0, duration: 0.65 }, "-=0.4")
+      tl.to(".cm-hero-badge", { opacity: 1, y: 0, duration: 0.78 })
+        .to(".cm-hero-title", { opacity: 1, y: 0, duration: 1.0 }, "-=0.42")
+        .to(".cm-hero-text", { opacity: 1, y: 0, duration: 0.82 }, "-=0.5")
+        .to(".cm-hero-actions", { opacity: 1, y: 0, duration: 0.76 }, "-=0.44")
         .to(
           ".cm-stat-card",
-          { opacity: 1, y: 0, duration: 0.55, stagger: 0.1 },
-          "-=0.25"
+          { opacity: 1, y: 0, duration: 0.62, stagger: 0.1 },
+          "-=0.3"
         )
         .to(
           ".cm-cat-card",
-          { opacity: 1, x: 0, scale: 1, duration: 0.72, stagger: 0.13 },
-          "-=0.75"
+          { opacity: 1, x: 0, scale: 1, duration: 0.82, stagger: 0.12 },
+          "-=0.78"
         )
-        .to(".cm-creator-card", { opacity: 1, y: 0, scale: 1, duration: 0.75 }, "-=0.25")
+        .to(".cm-creator-card", { opacity: 1, y: 0, scale: 1, duration: 0.8 }, "-=0.26")
         .to(
           ".cm-creator-image",
-          { opacity: 1, rotate: 0, scale: 1, duration: 0.65, ease: "back.out(1.7)" },
-          "-=0.45"
+          { opacity: 1, rotate: 0, scale: 1, duration: 0.72, ease: "back.out(1.7)" },
+          "-=0.48"
         );
 
       gsap.to(".cm-cat-card", {
@@ -72,16 +132,17 @@ export default function HomePage() {
   }, []);
 
   return (
-    <main
-      ref={pageRef}
-      style={{
-        minHeight: "100vh",
-        background:
-          "radial-gradient(circle at 12% 8%, rgba(245,158,11,0.24), transparent 30%), radial-gradient(circle at 88% 10%, rgba(234,88,12,0.18), transparent 28%), linear-gradient(180deg,#fffaf3 0%,#fff3e3 50%,#fff8ef 100%)",
-        color: "#24170f",
-        padding: "32px 22px 64px",
-      }}
-    >
+    <>
+      <main
+        ref={pageRef}
+        style={{
+          minHeight: "100vh",
+          background:
+            "radial-gradient(circle at 12% 8%, rgba(245,158,11,0.24), transparent 30%), radial-gradient(circle at 88% 10%, rgba(234,88,12,0.18), transparent 28%), linear-gradient(180deg,#fffaf3 0%,#fff3e3 50%,#fff8ef 100%)",
+          color: "#24170f",
+          padding: "32px 22px 64px",
+        }}
+      >
       <section
         style={{
           maxWidth: "1220px",
@@ -95,7 +156,8 @@ export default function HomePage() {
       >
         <div>
           <div
-            className="cm-hero-badge"
+            className="cm-hero-badge typing-text"
+            data-text="🐾 CollabMeow Cat Shop"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -114,7 +176,8 @@ export default function HomePage() {
           </div>
 
           <h1
-            className="cm-hero-title"
+            className="cm-hero-title typing-text"
+            data-text="Find your perfect cat friend."
             style={{
               fontSize: "clamp(3.8rem, 8vw, 7.4rem)",
               lineHeight: 0.88,
@@ -127,7 +190,8 @@ export default function HomePage() {
           </h1>
 
           <p
-            className="cm-hero-text"
+            className="cm-hero-text typing-text"
+            data-text="Browse adorable cats, view their personality, and choose the one that feels like home. Every cat is presented with care so each one gets their own spotlight."
             style={{
               maxWidth: "620px",
               fontSize: "1.16rem",
@@ -266,6 +330,8 @@ export default function HomePage() {
             </div>
 
             <h2
+              className="typing-text"
+              data-text="Meet the young creator behind CollabMeow."
               style={{
                 margin: 0,
                 fontSize: "clamp(1.55rem, 2.5vw, 2.35rem)",
@@ -278,6 +344,8 @@ export default function HomePage() {
             </h2>
 
             <p
+              className="typing-text"
+              data-text="Pace created this cat shop showcase to practice design, coding, and building a real web experience."
               style={{
                 margin: "12px 0 0",
                 color: "#6b5848",
@@ -396,6 +464,7 @@ export default function HomePage() {
           ))}
         </div>
       </section>
-    </main>
+      </main>
+    </>
   );
 }
